@@ -20,4 +20,4 @@ COPY app.py .
 EXPOSE 8000
 
 # Run the app
-CMD ["shiny", "run", "app.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["shiny", "run", "fileUpload.py", "--host", "0.0.0.0", "--port", "8000"]
