@@ -6,7 +6,8 @@ app_ui = ui.page_fluid(
     ui.h2("Excel Upload & Download App"),
     ui.input_file("file", "Upload an Excel file (.xlsx)", accept=[".xlsx"]),
     ui.output_table("preview"),
-    ui.download_button("download", "Download Processed Excel")
+    ui.download_button("download", "Download Processed Excel"),
+    ui.output_text("error_msg"),
 )
 
 def server(input, output, session):
@@ -16,10 +17,10 @@ def server(input, output, session):
         if not file:
             return None
         try:
-            print(file[0]["datapath"])
             return pd.read_excel(file[0]["datapath"], engine="openpyxl")
         except Exception as e:
-            output.error_msg.set(str(e))
+            # Save error message to reactive output
+            session._outputs["error_msg"].set(str(e))
             return None
 
     @output
@@ -28,19 +29,18 @@ def server(input, output, session):
         df = uploaded_df()
         if df is None:
             return None
-        # Select first 5 rows and first 5 columns for preview
         return df.iloc[:5, :5]
 
     @session.download(filename="processed.xlsx")
     def download():
         df = uploaded_df()
         if df is None:
-            return
+            return None
 
         buffer = BytesIO()
         with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
             df.to_excel(writer, sheet_name="Sheet1", index=False)
         buffer.seek(0)
-        yield buffer.read()
+        return buffer.read()
 
 app = App(app_ui, server)
